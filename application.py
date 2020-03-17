@@ -7,3 +7,6 @@ application = Flask(__name__)
 @application.route('/')
 def health_check():
     return jsonify({'response': 'health is ok'}, status.HTTP_200_OK)
+
+if __name__ == "__main__":
+    application.run(debug=True)
