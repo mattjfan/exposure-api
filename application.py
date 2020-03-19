@@ -2,6 +2,7 @@ import flask
 import neomodel
 from flask import Flask, jsonify, request
 from flask_api import status
+import os
 
 
 from neomodel import config
@@ -13,7 +14,7 @@ from push_notification import send_push_message
 
 application = Flask(__name__)
 
-config.DATABASE_URL = 'bolt://neo4j:test@localhost:7687'
+config.DATABASE_URL = os.getenv('DATABASE_URL')
 
 @application.route('/')
 def get_health():
