@@ -3,7 +3,8 @@ import neomodel
 from flask import Flask, jsonify, request
 from flask_api import status
 import os
-
+import json
+import sys
 
 from neomodel import config
 from data_models import Person, Place, WentToPlaceRel, ContactWithRel
@@ -16,9 +17,50 @@ application = Flask(__name__)
 
 config.DATABASE_URL = os.getenv('DATABASE_URL')
 
+def log(x):
+    print(x, file=sys.stdout)
+
+def make_response(content, http_status = status.HTTP_200_OK ):
+    # content = preserialize(content) # this was ported from cub's api for serializing custom objects jsonify doesn't recognize
+    # Can add it here if we need it.
+    return jsonify(content), http_status
+
+
 @application.route('/')
 def get_health():
     return health_check()
+
+# TODO: Not Implemented.
+# Should be a POST w/ data as an object w/ keys {
+#   new_place_id,
+#   old_place_id,
+#   user_identifier
+# }
+# We should move the user_identifier from old_placed_id to new_place_id buckets
+@application.route('/update-location', methods=["POST"])
+def ingestLocationUpdate():
+    data = json.loads(request.get_data())
+    log(data)
+    return make_response({}, status.HTTP_501_NOT_IMPLEMENTED)
+
+# TODO: Not Implemented.
+# Takes a place_id and returns the list of all user identifiers currently in that place_id bucket
+# as an array with key 'tokens' (see skeleton code below)
+@application.route('/get-contacted-ids', methods=["POST"])
+def getContactedIds():
+    data = json.loads(request.get_data())
+    log(data)
+    return make_response({ "tokens": []}, status.HTTP_501_NOT_IMPLEMENTED)
+
+# TODO: Not Implemented
+# Takes in an object with the push_token key set to the push notification key of the client
+# Ingests the push token and associates it with a unique identifier alias
+# returns an object with the unique identifier alias for that client.
+@application.route('/request-identifier', methods=["POST"])
+def ingestPushNotificationToken():
+    data = json.loads(request.get_data())
+    log(data)
+    return make_response({ "identifier": ''}, status.HTTP_501_NOT_IMPLEMENTED)
 
 #Create New User
 #Takes a request with a JSON body with a phoneNumber parameter
@@ -127,4 +169,4 @@ def reportSickness():
 
 
 if __name__ == "__main__":
-    application.run(debug=True)
+    application.run(debug=False)
