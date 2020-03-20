@@ -28,10 +28,17 @@ Install requirements
 pip install -r requirements.txt
 ```
 
+Updating requirements (if you need to add packages, make sure they get added to requirements.txt. Easiest way to do this (while in your virtual environment to avoid pushing extraneous dependencies))
+```
+pip freeze > requirements.txt
+```
+
 Running
 ```
 flask run
 ```
+
+*Note: We have a .env file for a reason. Plz use it thank you*
 
 
 ## Contributing
