@@ -9,6 +9,10 @@ from data_models import Person, Place, WentToPlaceRel, ContactWithRel
 from create_user import create_new_user
 from healthcheck import health_check
 from push_notification import send_push_message
+from database_access_helpers import (report_contact_between_individuals, 
+report_visited_place,
+retrieve_or_create_person_from_identifier,
+retrieve_or_create_place_from_identifier)
 
 
 application = Flask(__name__)
@@ -25,15 +29,17 @@ def get_health():
 def createNewUser():
     return create_new_user()
 
+def unobfuscate(hidden_string):
+    return hidden_string
+
+
+
 #The application reports that a person has tested positive for coronavirus. From this application, they
 #recieve a list of obfuscated ID's, the list of places a person has been to, and the diagnosis. 
 #We use this data to notify the contacted individuals, and then record the necessary relations in our database.
 
 #The List of sicknesses is reported as a JSON with the following structure: 
 
-
-def unobfuscate(hidden_string):
-    return hidden_string
 
 #Here is an example of the API POST Request going to the server that comes from the phone
 '''{
@@ -71,29 +77,55 @@ def unobfuscate(hidden_string):
     ],
     "phoneNumber": "301-536-2435"
 }'''
+
+#if it is an id, it returns true. If it is an input number, it returns false
+def isIDOrNumber(input_string):
+    return False
+
+def send_text_message(phone_number):
+    return True
+
 @application.route('/report_sickness_or_positive_test', methods=['POST'])
 def reportSickness(): 
     content = request.get_json()
+    #Step 1, check for contacted individuals field
     try:
         contacts = content['contacted_individuals']
     except: 
         contacts = None
+    #Step 2, check for obfuscated_id parameter
+    try: 
+        sender_id = content['obfuscated_ID']
+    except:
+        sender_id = None
+
     if (contacts == None):
         return jsonify({'response': 'bad request, there was no list of \'contacted_individuals\' from the request body (even an empty one)'}, status.HTTP_400_BAD_REQUEST)
+    if (sender_id == None):
+        return jsonify({'response': 'bad request, there was no \'sender_id\' property in the request body'}, status.HTTP_400_BAD_REQUEST)
+
     else:
+        true_sender_id = unobfuscate(sender_id)
+        sender = retrieve_or_create_person_from_identifier(true_sender_id)
+
         for individual in contacts:
             obfuscated_id = individual["obfuscated_id"]
             individual_id = unobfuscate(obfuscated_id)
-            
+            contacted_individual = retrieve_or_create_person_from_identifier(individual_id)
+            contact_time = individual['contact_time']
 
-            #now, send the push notification:
-            message = "We have a problem to report with your coronavirus exposure."
-            
-            #WE NEED TO INCLUDE ERROR CHECKING HERE!!
-            send_push_message(individual_id, message)
+            #report to the database that the two individuals contacted
+            report_contact_between_individuals(sender, contacted_individual, contact_time)
+
+            #now, send the push notification to the :
+            message = "We have a problem to report with your coronavirus exposure."            
+            try:
+                send_push_message(individual_id, message)
+            except:
+                #note that conversation failed
+                print("failed to record conversation point")
 
         return jsonify({'response': 'We sent the Push Notifications!!!'}, status.HTTP_200_OK)
-
 
 
 

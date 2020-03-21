@@ -5,7 +5,7 @@ StructuredNode, StringProperty, RelationshipTo, RelationshipFrom, StructuredRel)
 #Relationship that defines when a person went to a building
 class WentToPlaceRel(StructuredRel):
     enteredPlace = DateTimeProperty()
-    leftPlace = DateTimeProperty()
+    #leftPlace = DateTimeProperty()
 
 #Relationship that defines when two people contact eachother, and how
 class ContactWithRel(StructuredRel):
@@ -21,6 +21,7 @@ class ContactWithRel(StructuredRel):
 #Model Schema Defined
 class Person(StructuredNode):
     name = StringProperty()
+    system_id = StringProperty()
     phoneNumber = StringProperty(unique_index=True, required=True)
     didTestPositive = BooleanProperty()
     didHaveSymptomsButNoTest = BooleanProperty()
@@ -34,6 +35,7 @@ class Person(StructuredNode):
 
 class Place(StructuredNode):
     gpsCoordinates = StringProperty()
+    system_id = StringProperty()
     isRecognizedByGoogleLocations = BooleanProperty()
     name = StringProperty()
     address = StringProperty()
