@@ -23,9 +23,8 @@ retrieve_or_create_place_from_identifier)
 
 
 application = Flask(__name__)
-r = redis.Redis(host='localhost', port=6379, db=0)
-#config.DATABASE_URL = os.getenv('DATABASE_URL')
-config.DATABASE_URL = 'bolt://neo4j:test@localhost:7687'
+r = redis.Redis(host=os.getenv('REDIS_HOST'), port=os.getenv('REDIS_PORT'), db=0, password=os.getenv('REDIS_PWD'))
+config.DATABASE_URL = os.getenv('NEO_DATABASE_URL')
 
 
 @application.route('/')
@@ -88,36 +87,62 @@ def createNewUser():
 }'''
 @application.route('/report_sickness_or_positive_test', methods=['POST'])
 def reportSickness():
-    return reportSicknessSum(r)
+    return reportSicknessSum(r) 
+
 
 def send_text_message(phone_number):
     return True
 
 
-
-# TODO: Not Implemented.
 # Should be a POST w/ data as an object w/ keys {
 #   new_place_id,
 #   old_place_id,
 #   user_identifier
 # }
-# We should move the user_identifier from old_placed_id to new_place_id buckets
+# We should move the user_identifier from old_placed_id to new_place_id buckets.
+#If there is no old_place_id, please enter "None"
 @application.route('/update-location', methods=["POST"])
 def ingestLocationUpdate():
-    data = json.loads(request.get_data())
-    log(data)
-    return make_response({}, status.HTTP_501_NOT_IMPLEMENTED)
+    content = request.get_json()
+    try:
+        new_place_id = content['new_place_id']
+    except: 
+        return make_response({'response': 'bad request, please try again and specify a \'new_place_id\' parameter in the JSON request body'}, status.HTTP_400_BAD_REQUEST)
+    try:
+        old_place_id = content['old_place_id']
+    except: 
+        return make_response({'response': 'bad request, please try again and specify a \'old_place_id\' parameter in the JSON request body. If there is no old ID, set this parameter to \'None\''}, status.HTTP_400_BAD_REQUEST)
+    try:
+        user_identifier = content['user_identifier']
+    except: 
+        return make_response({'response': 'bad request, please try again and specify a \'user_identifier\' parameter in the JSON request body'}, status.HTTP_400_BAD_REQUEST)
 
-# TODO: Not Implemented.
+    #remove from old bucket if there is one
+    if(old_place_id != "None"):
+        r.srem(old_place_id, user_identifier)
+    
+    #add to new bucket
+    r.sadd(new_place_id, user_identifier)
+
+    return make_response({'response': "Successfully added " + user_identifier + " to space " + new_place_id}, status.HTTP_200_OK)
+
 # Takes a place_id and returns the list of all user identifiers currently in that place_id bucket
 # as an array with key 'tokens' (see skeleton code below)
 @application.route('/get-contacted-ids', methods=["POST"])
 def getContactedIds():
-    data = json.loads(request.get_data())
-    log(data)
-    return make_response({ "tokens": []}, status.HTTP_501_NOT_IMPLEMENTED)
+    content = request.get_json()
+    try:
+        place_id = content['place_id']
+    except: 
+        return make_response({'response': 'bad request, please try again and specify a \'place_id\' parameter in the JSON request body'}, status.HTTP_400_BAD_REQUEST)
+    try: 
+        members = r.smembers(place_id)
+    except:
+        return make_response({"response":"That is an invalid place identifier"}, status.HTTP_404_NOT_FOUND)
+    members = list(members)
+    for i in range(len(members)): members[i]=str(members[i])
 
-
+    return make_response({ "tokens": (members)}, status.HTTP_200_OK)
 
 
 
