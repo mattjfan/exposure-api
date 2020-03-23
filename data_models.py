@@ -9,9 +9,9 @@ class WentToPlaceRel(StructuredRel):
 
 #Relationship that defines when two people contact eachother, and how
 class ContactWithRel(StructuredRel):
-    timeOfContact = DateTimeProperty()
+    timeOfContact = DateTimeProperty(required=True)
     CONTACT_METHODS = {'L': 'Location', 'P': 'Personal Contact'}
-    typeOfContact = StringProperty(required=True, choices=CONTACT_METHODS)
+    typeOfContact = StringProperty(choices=CONTACT_METHODS)
 
     #tim = Person(sex='M').save()
     #tim.sex # M
@@ -21,8 +21,8 @@ class ContactWithRel(StructuredRel):
 #Model Schema Defined
 class Person(StructuredNode):
     name = StringProperty()
-    system_id = StringProperty()
-    phoneNumber = StringProperty(unique_index=True, required=True)
+    system_id = StringProperty(unique_index=True, required=True)
+    phoneNumber = StringProperty()
     didTestPositive = BooleanProperty()
     didHaveSymptomsButNoTest = BooleanProperty()
     timeOfPositiveTest = DateTimeProperty()

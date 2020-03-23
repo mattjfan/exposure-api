@@ -5,12 +5,17 @@ from flask_api import status
 import os
 import json
 import sys
+import uuid
+import redis
+import datetime
 
 from neomodel import config
 from data_models import Person, Place, WentToPlaceRel, ContactWithRel
-from create_user import create_new_user
+from create_user import create_new_user, ingestPushNotificationAndCreateID
 from healthcheck import health_check
 from push_notification import send_push_message
+from utilities import make_response, unobfuscate
+from report_sickness import reportSicknessSum
 from database_access_helpers import (report_contact_between_individuals, 
 report_visited_place,
 retrieve_or_create_person_from_identifier,
@@ -18,53 +23,22 @@ retrieve_or_create_place_from_identifier)
 
 
 application = Flask(__name__)
-
-config.DATABASE_URL = os.getenv('DATABASE_URL')
-
-def log(x):
-    print(x, file=sys.stdout)
-
-def make_response(content, http_status = status.HTTP_200_OK ):
-    # content = preserialize(content) # this was ported from cub's api for serializing custom objects jsonify doesn't recognize
-    # Can add it here if we need it.
-    return jsonify(content), http_status
+r = redis.Redis(host='localhost', port=6379, db=0)
+#config.DATABASE_URL = os.getenv('DATABASE_URL')
+config.DATABASE_URL = 'bolt://neo4j:test@localhost:7687'
 
 
 @application.route('/')
 def get_health():
     return health_check()
 
-# TODO: Not Implemented.
-# Should be a POST w/ data as an object w/ keys {
-#   new_place_id,
-#   old_place_id,
-#   user_identifier
-# }
-# We should move the user_identifier from old_placed_id to new_place_id buckets
-@application.route('/update-location', methods=["POST"])
-def ingestLocationUpdate():
-    data = json.loads(request.get_data())
-    log(data)
-    return make_response({}, status.HTTP_501_NOT_IMPLEMENTED)
 
-# TODO: Not Implemented.
-# Takes a place_id and returns the list of all user identifiers currently in that place_id bucket
-# as an array with key 'tokens' (see skeleton code below)
-@application.route('/get-contacted-ids', methods=["POST"])
-def getContactedIds():
-    data = json.loads(request.get_data())
-    log(data)
-    return make_response({ "tokens": []}, status.HTTP_501_NOT_IMPLEMENTED)
-
-# TODO: Not Implemented
 # Takes in an object with the push_token key set to the push notification key of the client
 # Ingests the push token and associates it with a unique identifier alias
 # returns an object with the unique identifier alias for that client.
 @application.route('/request-identifier', methods=["POST"])
 def ingestPushNotificationToken():
-    data = json.loads(request.get_data())
-    log(data)
-    return make_response({ "identifier": ''}, status.HTTP_501_NOT_IMPLEMENTED)
+    return ingestPushNotificationAndCreateID(r)
 
 #Create New User
 #Takes a request with a JSON body with a phoneNumber parameter
@@ -72,17 +46,9 @@ def ingestPushNotificationToken():
 def createNewUser():
     return create_new_user()
 
-def unobfuscate(hidden_string):
-    return hidden_string
-
-
-
 #The application reports that a person has tested positive for coronavirus. From this application, they
 #recieve a list of obfuscated ID's, the list of places a person has been to, and the diagnosis. 
 #We use this data to notify the contacted individuals, and then record the necessary relations in our database.
-
-#The List of sicknesses is reported as a JSON with the following structure: 
-
 
 #Here is an example of the API POST Request going to the server that comes from the phone
 '''{
@@ -120,58 +86,36 @@ def unobfuscate(hidden_string):
     ],
     "phoneNumber": "301-536-2435"
 }'''
-
-#if it is an id, it returns true. If it is an input number, it returns false
-def isIDOrNumber(input_string):
-    return False
+@application.route('/report_sickness_or_positive_test', methods=['POST'])
+def reportSickness():
+    return reportSicknessSum(r)
 
 def send_text_message(phone_number):
     return True
 
-@application.route('/report_sickness_or_positive_test', methods=['POST'])
-def reportSickness(): 
-    content = request.get_json()
-    #Step 1, check for contacted individuals field
-    try:
-        contacts = content['contacted_individuals']
-    except: 
-        contacts = None
-    #Step 2, check for obfuscated_id parameter
-    try: 
-        sender_id = content['obfuscated_ID']
-    except:
-        sender_id = None
-
-    if (contacts == None):
-        return jsonify({'response': 'bad request, there was no list of \'contacted_individuals\' from the request body (even an empty one)'}, status.HTTP_400_BAD_REQUEST)
-    if (sender_id == None):
-        return jsonify({'response': 'bad request, there was no \'sender_id\' property in the request body'}, status.HTTP_400_BAD_REQUEST)
-
-    else:
-        true_sender_id = unobfuscate(sender_id)
-        sender = retrieve_or_create_person_from_identifier(true_sender_id)
-
-        for individual in contacts:
-            obfuscated_id = individual["obfuscated_id"]
-            individual_id = unobfuscate(obfuscated_id)
-            contacted_individual = retrieve_or_create_person_from_identifier(individual_id)
-            contact_time = individual['contact_time']
-
-            #report to the database that the two individuals contacted
-            report_contact_between_individuals(sender, contacted_individual, contact_time)
-
-            #now, send the push notification to the :
-            message = "We have a problem to report with your coronavirus exposure."            
-            try:
-                send_push_message(individual_id, message)
-            except:
-                #note that conversation failed
-                print("failed to record conversation point")
-
-        return jsonify({'response': 'We sent the Push Notifications!!!'}, status.HTTP_200_OK)
 
 
+# TODO: Not Implemented.
+# Should be a POST w/ data as an object w/ keys {
+#   new_place_id,
+#   old_place_id,
+#   user_identifier
+# }
+# We should move the user_identifier from old_placed_id to new_place_id buckets
+@application.route('/update-location', methods=["POST"])
+def ingestLocationUpdate():
+    data = json.loads(request.get_data())
+    log(data)
+    return make_response({}, status.HTTP_501_NOT_IMPLEMENTED)
 
+# TODO: Not Implemented.
+# Takes a place_id and returns the list of all user identifiers currently in that place_id bucket
+# as an array with key 'tokens' (see skeleton code below)
+@application.route('/get-contacted-ids', methods=["POST"])
+def getContactedIds():
+    data = json.loads(request.get_data())
+    log(data)
+    return make_response({ "tokens": []}, status.HTTP_501_NOT_IMPLEMENTED)
 
 
 
