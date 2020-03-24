@@ -16,16 +16,16 @@ def reportSicknessSum(r):
         contacts = content['contacted_individuals']
     except: 
         contacts = None
-    #Step 2, check for obfuscated_id parameter
+    #Step 2, check for identifier parameter
     try: 
-        sender_id = content['obfuscated_ID']
+        sender_id = content['identifier']
     except:
         sender_id = None
 
     if (contacts == None):
         return make_response({'response': 'bad request, there was no list of \'contacted_individuals\' from the request body (even an empty one)'}, status.HTTP_400_BAD_REQUEST)
     elif (sender_id == None):
-        return make_response({'response': 'bad request, there was no \'sender_id\' property in the request body'}, status.HTTP_400_BAD_REQUEST)
+        return make_response({'response': 'bad request, there was no \'identifier\' property in the request body'}, status.HTTP_400_BAD_REQUEST)
 
     else:
         true_sender_id = unobfuscate(sender_id, r)
@@ -38,7 +38,7 @@ def reportSicknessSum(r):
             is_cell_phone = False
             #1 See that necessary variables exist
             try: 
-                contacted_identifier = individual["obfuscated_id"]
+                contacted_identifier = individual["identifier"]
             except: 
                 contacted_identifier = None
             try: 

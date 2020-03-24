@@ -1,4 +1,4 @@
-from neomodel import (BooleanProperty, DateTimeProperty, 
+from neomodel import (BooleanProperty, DateTimeProperty, ArrayProperty,
 StructuredNode, StringProperty, RelationshipTo, RelationshipFrom, StructuredRel)
 
 #Relationships Defined
@@ -21,22 +21,22 @@ class ContactWithRel(StructuredRel):
 #Model Schema Defined
 class Person(StructuredNode):
     name = StringProperty()
-    system_id = StringProperty(unique_index=True, required=True)
+    identifier = StringProperty(unique_index=True, required=True)
     phoneNumber = StringProperty()
-    didTestPositive = BooleanProperty()
-    didHaveSymptomsButNoTest = BooleanProperty()
-    timeOfPositiveTest = DateTimeProperty()
-    #First Contact Information?
+    TESTING_STATUS_LIST = {'YES_WAITING': 'YES_WAITING', 'YES_NEGATIVE': 'YES_NEGATIVE', 'YES_POSITIVE':'YES_POSITIVE', 'NO_DENIED':'NO_DENIED', 'NO':'NO'}
+    tested_status = StringProperty(choices=TESTING_STATUS_LIST)
+    test_date = DateTimeProperty()
+    symptoms_date = DateTimeProperty()
+    additional_info = StringProperty()
+    symptoms = ArrayProperty()
     atRisk = BooleanProperty()
-    currentPlace = RelationshipTo('Place', 'CURRENT_PLACE')
     wentToPlaces = RelationshipTo('Place', 'VISITED', model=WentToPlaceRel)
     contactWithPeople = RelationshipTo('Person', 'CONTACTED', model=ContactWithRel)
 
-
 class Place(StructuredNode):
-    gpsCoordinates = StringProperty()
-    system_id = StringProperty()
-    isRecognizedByGoogleLocations = BooleanProperty()
-    name = StringProperty()
-    address = StringProperty()
-    didInfectedPersonComeHere = BooleanProperty()
+    gpsLAT = StringProperty()
+    gpsLon = StringProperty()
+    identifier = StringProperty(unique_index=True, required=True)
+    didInfectedPersonComeHere = BooleanProperty()    
+    didSymptomaticPersonComeHere = BooleanProperty()
+
