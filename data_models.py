@@ -34,6 +34,7 @@ class Person(StructuredNode):
     atRisk = BooleanProperty(default=False)
     wentToPlaces = RelationshipTo('Place', 'VISITED', model=WentToPlaceRel)
     contactWithPeople = RelationshipTo('Person', 'CONTACTED', model=ContactWithRel)
+    didReport = BooleanProperty(default=False)
 
 class Place(StructuredNode):
     gpsLAT_LONG = StringProperty()

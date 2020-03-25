@@ -16,16 +16,12 @@ def report_visited_place(reporter, place, visited_date_time):
 #retrieves individuals + places from database if they already exist, or creates them if they dont. 
 def retrieve_or_create_person_from_identifier(identifier):
     try:
-        print("we are trying to retrieve the following person")
-        print(identifier)
         identified_person = Person.nodes.get(identifier=identifier)
     
     except (neomodel.exceptions.MultipleNodesReturned):
-            print("Ok that didn't work, because MultipleNodesReturned")
             return None
     except (neomodel.exceptions.DoesNotExist): 
         identified_person = Person(identifier=identifier).save()
-        print("Ok, so we returned a brand new person!!")
     return identified_person
 
 
@@ -51,6 +47,9 @@ def update_person_statistics(individual,tested_status,test_date,symptoms_date, s
 
     #Set Additional Info Param
     individual.additional_info = additional_info
+
+    individual.didReport = True
+    
     individual.save()
     return individual
 

@@ -106,7 +106,29 @@ def send_text_message(phone_number):
 @application.route('/invite_friend')
 
 
-@application.route('/get_reported_symptoms')
+@application.route('/get-symptoms')
+def getReportedSymptoms():
+    content = request.get_json()
+    necessary_values = ['identifier']
+    isGoodRequest = check_for_values_in_request(necessary_values, content)
+    if (isGoodRequest[0] == False):
+        return make_response({'response': 'bad request, please try again and specify the ' + str(isGoodRequest[1]) + ' parameter in the JSON request body.'}, status.HTTP_400_BAD_REQUEST)
+    identifier = content['identifier']
+    push_id = unobfuscate(identifier, r)
+
+    if (push_id == None or identifier == None):
+        return make_response({'response': '\'identifier\' is invalid. Not Part of our database'}, status.HTTP_400_BAD_REQUEST)
+    else:
+        individual = retrieve_or_create_person_from_identifier(identifier)
+        response_json = {
+            'tested_status': individual.tested_status,
+            'symptoms': individual.symptoms,
+            'additional_info': individual.additional_info,
+            'test_date': individual.test_date,
+            'symptoms_date': individual.symptoms_date,
+            'has_response': individual.didReport
+        }
+        return make_response(response_json, status.HTTP_200_OK)
 
 
 # Should be a POST w/ data as an object w/ keys {
