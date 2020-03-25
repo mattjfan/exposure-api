@@ -1,5 +1,6 @@
 import redis
 import sys
+import datetime
 
 from flask import Flask, jsonify, request
 from flask_api import status
@@ -33,3 +34,12 @@ def check_for_values_in_request(values_list, request_json):
             values_not_present.append(value)
             all_values_present_in_request = False
     return [all_values_present_in_request, values_not_present]
+
+
+#returns a datetime opject. Currently, accepts "%d/%m/%Y %H:%M:%S" formatting! Can change as necessary.
+def try_for_datetime_from_string(string_time):
+    try: 
+        my_time = datetime.datetime.strptime(string_time, "%d/%m/%Y %H:%M:%S")
+    except:
+        my_time = datetime.datetime.now()
+    return my_time

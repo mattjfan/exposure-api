@@ -19,8 +19,7 @@ from report_sickness import reportSicknessSum
 from redis_place_interactions import ingest_location_update, get_contacted_ids
 from database_access_helpers import (report_contact_between_individuals, 
 report_visited_place,
-retrieve_or_create_person_from_identifier,
-retrieve_or_create_place_from_identifier)
+retrieve_or_create_person_from_identifier)
 
 
 application = Flask(__name__)
