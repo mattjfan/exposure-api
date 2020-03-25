@@ -20,7 +20,7 @@ from redis_place_interactions import ingest_location_update, get_contacted_ids
 from invite_and_signup import invite_new_user, sign_up
 from database_access_helpers import (report_contact_between_individuals, 
 report_visited_place, retrieve_or_create_protouser_from_number,
-retrieve_or_create_person_from_identifier, does_proto_user_exist)
+retrieve_or_create_person_from_identifier, does_proto_user_exist, get_is_at_risk)
 
 
 application = Flask(__name__)
@@ -55,10 +55,34 @@ def createNewUser():
 def reportSickness():
     return reportSicknessSum(r) 
 
+
+#Confirmed Case Exposed - At Risk
+#Exposed to N people with Symptoms - Cautious
+#Not Exposed - Normal. 
 @application.route('/get_exposure_risk')
-    #Confirmed Case Exposed - At Risk
-    #Exposed to N people with Symptoms - Cautious
-    #Not Exposed - Normal. 
+def getExposureRisk():
+    content = request.get_json()
+    necessary_values = ['identifier']
+    isGoodRequest = check_for_values_in_request(necessary_values, content)
+    if (isGoodRequest[0] == False):
+        return make_response({'response': 'bad request, please try again and specify the ' + str(isGoodRequest[1]) + ' parameter in the JSON request body.'}, status.HTTP_400_BAD_REQUEST)
+    identifier = content['identifier']
+
+
+    is_risky = get_is_at_risk(identifier)
+    if (is_risky == False):
+        toReturn = {
+            "exposure_risk":"NORMAL",
+            "rationale": "We have not detected that you have been in contact with a carrier of COVID-19.",
+            "guidance": "Continue to Comply with local quarantine and lockdown guidelines." 
+        }
+    else: 
+        toReturn = {
+            "exposure_risk":"AT_RISK",
+            "rationale": "We have detected that you have been in contact with a carrier of COVID-19, or someone who has reported symptoms.",
+            "guidance": "Continue to Comply with local quarantine and lockdown guidelines, but seek medical help if you begin to experience symptoms yourself." 
+        }
+    return make_response(toReturn, http_status=status.HTTP_200_OK)
 
 
 @application.route('/invite-new-user', methods=['POST'])

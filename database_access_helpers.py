@@ -85,3 +85,11 @@ def does_proto_user_exist(phone):
         return True
     except:
         return False
+
+
+def get_is_at_risk(identifier):
+    try:
+        identified_person = Person.nodes.get(identifier=identifier)
+        return True
+    except:
+        return False
