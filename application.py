@@ -27,7 +27,6 @@ application = Flask(__name__)
 r = redis.Redis(host=os.getenv('REDIS_HOST'), port=os.getenv('REDIS_PORT'), db=0, password=os.getenv('REDIS_PWD'))
 config.DATABASE_URL = os.getenv('NEO_DATABASE_URL')
 
-
 @application.route('/')
 def get_health():
     return health_check()
@@ -112,6 +111,20 @@ def ingestLocationUpdate():
 @application.route('/get-contacted-ids', methods=["POST"])
 def getContactedIds():
     return get_contacted_ids(r)
+
+
+@application.route('/get-infected-places')
+def get_infected_locations():
+    locationsList = Place.nodes.all()
+    json_list = []
+    for node in locationsList:
+        location = {
+            "latitude": node.gpsLAT,
+            "longitude":node.gpsLONG,
+        }
+        json_list.append(location)
+    return make_response({'locations':json_list}, status.HTTP_200_OK)
+
 
 if __name__ == "__main__":
     application.run(debug=False)
