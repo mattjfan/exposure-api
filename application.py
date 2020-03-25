@@ -24,10 +24,8 @@ retrieve_or_create_person_from_identifier, does_proto_user_exist, get_is_at_risk
 
 
 application = Flask(__name__)
-r = redis.Redis(host='localhost', port=6379, db=0)
-config.DATABASE_URL = 'bolt://neo4j:test@localhost:7687'
-#r = redis.Redis(host=os.getenv('REDIS_HOST'), port=os.getenv('REDIS_PORT'), db=0, password=os.getenv('REDIS_PWD'))
-#config.DATABASE_URL = os.getenv('NEO_DATABASE_URL')
+r = redis.Redis(host=os.getenv('REDIS_HOST'), port=os.getenv('REDIS_PORT'), db=0, password=os.getenv('REDIS_PWD'))
+config.DATABASE_URL = os.getenv('NEO_DATABASE_URL')
 
 
 @application.route('/')
