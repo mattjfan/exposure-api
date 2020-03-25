@@ -1,4 +1,5 @@
 import datetime
+import uuid
 from neomodel import (BooleanProperty, DateTimeProperty, ArrayProperty,
 StructuredNode, StringProperty, RelationshipTo, RelationshipFrom, StructuredRel)
 
@@ -22,7 +23,6 @@ class ContactWithRel(StructuredRel):
 #Model Schema Defined
 
 class Person(StructuredNode):
-    name = StringProperty()
     identifier = StringProperty(unique_index=True, required=True)
     phoneNumber = StringProperty()
     TESTING_STATUS_LIST = {'YES_WAITING': 'YES_WAITING', 'YES_NEGATIVE': 'YES_NEGATIVE', 'YES_POSITIVE':'YES_POSITIVE', 'NO_DENIED':'NO_DENIED', 'NO':'NO'}
@@ -40,3 +40,11 @@ class Place(StructuredNode):
     gpsLAT_LONG = StringProperty()
     gpsLONG = StringProperty()
     gpsLAT = StringProperty()
+
+
+#if you are a proto-user, then the identifier returns a cell phone instead of a push token
+class ProtoUser(StructuredNode):
+    phone = StringProperty(required=True)
+    contactedIds = ArrayProperty(default=[])
+    identifier = StringProperty(unique_index=True, default=lambda: uuid.uuid1())
+    

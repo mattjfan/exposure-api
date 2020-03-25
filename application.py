@@ -14,12 +14,13 @@ from data_models import Person, Place, WentToPlaceRel, ContactWithRel
 from create_user import create_new_user, ingestPushNotificationAndCreateID
 from healthcheck import health_check
 from push_notification import send_push_message
-from utilities import make_response, unobfuscate, check_for_values_in_request
-from report_sickness import reportSicknessSum
+from utilities import make_response, unobfuscate, check_for_values_in_request, send_message
+from report_sickness import reportSicknessSum, get_reported_symptoms
 from redis_place_interactions import ingest_location_update, get_contacted_ids
+from invite_and_signup import invite_new_user, sign_up
 from database_access_helpers import (report_contact_between_individuals, 
-report_visited_place,
-retrieve_or_create_person_from_identifier)
+report_visited_place, retrieve_or_create_protouser_from_number,
+retrieve_or_create_person_from_identifier, does_proto_user_exist)
 
 
 application = Flask(__name__)
@@ -32,7 +33,6 @@ config.DATABASE_URL = 'bolt://neo4j:test@localhost:7687'
 @application.route('/')
 def get_health():
     return health_check()
-
 
 # Takes in an object with the push_token key set to the push notification key of the client
 # Ingests the push token and associates it with a unique identifier alias
@@ -51,51 +51,9 @@ def createNewUser():
 #recieve a list of obfuscated ID's, the list of places a person has been to, and the diagnosis. 
 #We use this data to notify the contacted individuals, and then record the necessary relations in our database.
 
-#Here is an example of the API POST Request going to the server that comes from the phone
-'''{
-    "obfuscated_ID": "fdjhisjdfkjbsdkjfbsdk",
-    "tested_positive": True, 
-    "listed symptoms": ["wet_cough", "headache"],
-    "symptom_description": "Lorem Ipsum but I might die!",
-    "contacted_individuals": [
-        {
-            "obfuscated_ID": "kgkjsdbkjbfjhsdjfjsd"
-            "contact_time": "25/01/2017 10:10:05"
-        },
-        {
-            "obfuscated_ID": "kgkjsdbkjbfjhsdjfjsd"
-            "contact_time": "25/01/2017 10:10:05"
-        },
-        {
-            "obfuscated_ID": "kgkjsdbkjbfjhsdjfjsd"
-            "contact_time": "25/01/2017 10:10:05"
-        },
-        {
-            "obfuscated_ID": "kgkjsdbkjbfjhsdjfjsd"
-            "contact_time": "25/01/2017 10:10:05"
-        },
-    ],
-    "visited_places": [
-        {
-            "place_ID": "Bucket 1"
-            "visit_time": "25/01/2017 10:10:05"
-        },
-        {
-            "place_ID": "Bucket 1"
-            "visit_time": "25/01/2017 10:10:05"
-        },
-    ],
-    "phoneNumber": "301-536-2435"
-}'''
 @application.route('/report_sickness_or_positive_test', methods=['POST'])
 def reportSickness():
     return reportSicknessSum(r) 
-
-
-def send_text_message(phone_number):
-    return True
-
-
 
 @application.route('/get_exposure_risk')
     #Confirmed Case Exposed - At Risk
@@ -103,32 +61,17 @@ def send_text_message(phone_number):
     #Not Exposed - Normal. 
 
 
-@application.route('/invite_friend')
+@application.route('/invite-new-user', methods=['POST'])
+def inviteNewUser():
+    return invite_new_user(r)
 
+@application.route('/signup', methods=['POST'])
+def signUp(): 
+    return sign_up(r)
 
 @application.route('/get-symptoms')
 def getReportedSymptoms():
-    content = request.get_json()
-    necessary_values = ['identifier']
-    isGoodRequest = check_for_values_in_request(necessary_values, content)
-    if (isGoodRequest[0] == False):
-        return make_response({'response': 'bad request, please try again and specify the ' + str(isGoodRequest[1]) + ' parameter in the JSON request body.'}, status.HTTP_400_BAD_REQUEST)
-    identifier = content['identifier']
-    push_id = unobfuscate(identifier, r)
-
-    if (push_id == None or identifier == None):
-        return make_response({'response': '\'identifier\' is invalid. Not Part of our database'}, status.HTTP_400_BAD_REQUEST)
-    else:
-        individual = retrieve_or_create_person_from_identifier(identifier)
-        response_json = {
-            'tested_status': individual.tested_status,
-            'symptoms': individual.symptoms,
-            'additional_info': individual.additional_info,
-            'test_date': individual.test_date,
-            'symptoms_date': individual.symptoms_date,
-            'has_response': individual.didReport
-        }
-        return make_response(response_json, status.HTTP_200_OK)
+    return get_reported_symptoms(r)
 
 
 # Should be a POST w/ data as an object w/ keys {

@@ -1,8 +1,11 @@
 import redis
 import sys
 import datetime
+import os
+
 
 from flask import Flask, jsonify, request
+from twilio.rest import Client
 from flask_api import status
 
 
@@ -43,3 +46,30 @@ def try_for_datetime_from_string(string_time):
     except:
         my_time = datetime.datetime.now()
     return my_time
+
+
+def format_phone_number(phone_string):
+    if len(phone_string) == 10:
+        return "+1" + phone_string
+    return phone_string
+
+
+
+#REMEMBER, SWAP ALL OF THIS OUT FOR ENV VARIABLES!!!!
+def send_message(message, phone_number):
+    account_sid = os.getenv('SMS_ACCOUNT_SID')
+    auth_token = os.getenv('SMS_AUTH_TOKEN')
+    SENDING_PHONE = os.getenv('SMS_PHONE_NUMBER')
+    client = Client(account_sid, auth_token)
+    
+    phone_number = format_phone_number(phone_number)
+    try: 
+        message = client.messages \
+            .create(
+                body=message,
+                from_=SENDING_PHONE,
+                to=phone_number
+            )
+        return True
+    except:
+        return False
