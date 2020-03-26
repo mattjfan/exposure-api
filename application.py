@@ -113,7 +113,7 @@ def getContactedIds():
     return get_contacted_ids(r)
 
 
-@application.route('/get-infected-places')
+@application.route('/get-infected-places', methods=["POST"])
 def get_infected_locations():
     locationsList = Place.nodes.all()
     json_list = []
