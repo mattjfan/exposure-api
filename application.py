@@ -56,7 +56,7 @@ def reportSickness():
 #Confirmed Case Exposed - At Risk
 #Exposed to N people with Symptoms - Cautious
 #Not Exposed - Normal. 
-@application.route('/get_exposure_risk')
+@application.route('/get_exposure_risk', methods=['POST'])
 def getExposureRisk():
     content = request.get_json()
     necessary_values = ['identifier']
@@ -90,7 +90,7 @@ def inviteNewUser():
 def signUp(): 
     return sign_up(r)
 
-@application.route('/get-symptoms')
+@application.route('/get-symptoms', methods=['POST'])
 def getReportedSymptoms():
     return get_reported_symptoms(r)
 

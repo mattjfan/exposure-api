@@ -27,11 +27,11 @@ def retrieve_or_create_person_from_identifier(identifier):
 
 
 #Takes in a person and parameters, and updates them appropriately. 
-def update_person_statistics(individual,tested_status,test_date,symptoms_date, symptoms, additional_info):
+def update_person_statistics(individual,test_status,test_date,symptoms_date, symptoms, additional_info):
     #Check to make sure tested status is valid enum, then update
     CANNON_TESTING_STATUS = ['YES_WAITING', 'YES_NEGATIVE', 'YES_POSITIVE', 'NO_DENIED', 'NO']
-    if tested_status in CANNON_TESTING_STATUS:
-        individual.tested_status = tested_status
+    if test_status in CANNON_TESTING_STATUS:
+        individual.test_status = test_status
 
     #Ensure that test_date is a valid date_time.
     individual.test_date = try_for_datetime_from_string(test_date)
@@ -40,12 +40,12 @@ def update_person_statistics(individual,tested_status,test_date,symptoms_date, s
     individual.symptoms_date = try_for_datetime_from_string(symptoms_date)
 
     #Add list of symptoms
-    current_symptoms = individual.symptoms
-    for item in symptoms:
-        if (item not in current_symptoms):
-            current_symptoms.append(item)
-    individual.symptoms = current_symptoms
-
+    # current_symptoms = individual.symptoms
+    # for item in symptoms:
+    #     if (item not in current_symptoms):
+    #         current_symptoms.append(item)
+    # individual.symptoms = current_symptoms
+    individual.symptoms = symptoms
     #Set Additional Info Param
     individual.additional_info = additional_info
 

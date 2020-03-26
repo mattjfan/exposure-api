@@ -26,7 +26,7 @@ class Person(StructuredNode):
     identifier = StringProperty(unique_index=True, required=True)
     phoneNumber = StringProperty()
     TESTING_STATUS_LIST = {'YES_WAITING': 'YES_WAITING', 'YES_NEGATIVE': 'YES_NEGATIVE', 'YES_POSITIVE':'YES_POSITIVE', 'NO_DENIED':'NO_DENIED', 'NO':'NO'}
-    tested_status = StringProperty(choices=TESTING_STATUS_LIST, default='NO')
+    test_status = StringProperty(choices=TESTING_STATUS_LIST, default='NO')
     test_date = DateTimeProperty(default=lambda: datetime.datetime.now())
     symptoms_date = DateTimeProperty(default=lambda: datetime.datetime.now())
     additional_info = StringProperty(default="")

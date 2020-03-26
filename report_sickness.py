@@ -24,12 +24,12 @@ def isCellPhone(supposedNumber):
 def reportSicknessSum(r): 
     #Step 1, Check to make sure all parameters are there
     content = request.get_json()
-    necessary_values = ['identifier', 'tested_status', 'test_date', 'symptoms_date', 'symptoms', 'additional_info', 'contacted_individuals', 'visited_locations']
+    necessary_values = ['identifier', 'test_status', 'test_date', 'symptoms_date', 'symptoms', 'additional_info', 'contacted_individuals', 'visited_locations']
     isGoodRequest = check_for_values_in_request(necessary_values, content)
     if (isGoodRequest[0] == False):
-        return make_response({'response': 'bad request, please try again and specify the ' + str(isGoodRequest[1]) + ' parameter in the JSON request body.'}, status.HTTP_400_BAD_REQUEST)
+        return make_response({'error': 'bad request, please try again and specify the ' + str(isGoodRequest[1]) + ' parameter in the JSON request body.'}, status.HTTP_400_BAD_REQUEST)
     identifier = content['identifier']
-    tested_status = content['tested_status']
+    test_status = content['test_status']
     test_date = content['test_date']
     symptoms_date = content['symptoms_date']
     symptoms = content['symptoms']
@@ -44,7 +44,7 @@ def reportSicknessSum(r):
         return make_response({'response': '\'identifier\' is invalid. Not Part of our database'}, status.HTTP_400_BAD_REQUEST)
 
     sender = retrieve_or_create_person_from_identifier(identifier)
-    update_person_statistics(sender, tested_status, test_date, symptoms_date, symptoms, additional_info)
+    update_person_statistics(sender, test_status, test_date, symptoms_date, symptoms, additional_info)
 
     #Step 3, report contacts
     for individual in contacted_individuals:
@@ -145,7 +145,7 @@ def get_reported_symptoms(r):
     else:
         individual = retrieve_or_create_person_from_identifier(identifier)
         response_json = {
-            'tested_status': individual.tested_status,
+            'test_status': individual.test_status,
             'symptoms': individual.symptoms,
             'additional_info': individual.additional_info,
             'test_date': individual.test_date,
