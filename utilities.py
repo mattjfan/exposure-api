@@ -3,10 +3,11 @@ import sys
 import datetime
 import os
 
-
+import dateutil.parser
 from flask import Flask, jsonify, request
 from twilio.rest import Client
 from flask_api import status
+
 
 
 def make_response(content, http_status = status.HTTP_200_OK ):
@@ -42,7 +43,8 @@ def check_for_values_in_request(values_list, request_json):
 #returns a datetime opject. Currently, accepts "%d/%m/%Y %H:%M:%S" formatting! Can change as necessary.
 def try_for_datetime_from_string(string_time):
     try: 
-        my_time = datetime.datetime.strptime(string_time, "%d/%m/%Y %H:%M:%S")
+        # my_time = datetime.datetime.strptime(string_time, "%d/%m/%Y %H:%M:%S")
+        my_time =  dateutil.parser.isoparse(string_time)
     except:
         my_time = datetime.datetime.now()
     return my_time
