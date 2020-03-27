@@ -2,11 +2,12 @@ import redis
 import sys
 import datetime
 import os
-
+from functools import wraps
 import dateutil.parser
-from flask import Flask, jsonify, request
+from flask import Flask, jsonify, request 
 from twilio.rest import Client
 from flask_api import status
+import json
 
 
 
@@ -75,3 +76,24 @@ def send_message(message, phone_number):
         return True
     except:
         return False
+
+#Wrapper to protect our admin tokens 
+#takes the admin token with all other arguments in the body 
+#with key 'body', returns rest of body including token as content to 
+#route as argument.
+
+def admin_protected(callback):
+    @wraps(callback)
+    def wrapper(*args, **kwargs):
+        content=json.loads(request.get_data())
+        #content = request.get_json()
+        if('token' in content and content['token'] == os.getenv("ADMIN_TOKEN")):
+            try: 
+                myargs = { 'content': content }
+                myargs.update(kwargs)
+                return callback(*args, **myargs)
+            except Exception as e:
+                return make_response({"response": "Something Bad Hapened"}, status.HTTP_500_INTERNAL_SERVER_ERROR)
+        else:
+            return make_response({"response": "You're not authorized to use this endpoint"}, status.HTTP_401_UNAUTHORIZED)
+    return wrapper
