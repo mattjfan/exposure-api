@@ -97,8 +97,8 @@ def reportSicknessSum(r):
             message = "We have a problem to report with your coronavirus exposure."       
             try:
                 send_push_message(true_code, message)
-            except:
-                print("failed to send push notification for some reason")
+            except Exception as e:
+                print(f'failed to send push notification: {e}')
     
     #Step 4, Report and Store Locations
     for location in visited_locations:

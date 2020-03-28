@@ -13,7 +13,6 @@ from neomodel import config
 from data_models import Person, Place, WentToPlaceRel, ContactWithRel
 from create_user import create_new_user, ingestPushNotificationAndCreateID
 from healthcheck import health_check
-from push_notification import send_push_message
 from utilities import make_response, unobfuscate, check_for_values_in_request, send_message
 from report_sickness import reportSicknessSum, get_reported_symptoms
 from redis_place_interactions import ingest_location_update, get_contacted_ids
