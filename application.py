@@ -21,16 +21,21 @@ from invite_and_signup import invite_new_user, sign_up
 from database_access_helpers import (report_contact_between_individuals, 
 report_visited_place, retrieve_or_create_protouser_from_number,
 retrieve_or_create_person_from_identifier, does_proto_user_exist, get_is_at_risk)
-from redis_purge_place import purge_place
+from redis_purge_place import purge_place,purge_all
 
 
 application = Flask(__name__)
 r = redis.Redis(host=os.getenv('REDIS_HOST'), port=os.getenv('REDIS_PORT'), db=0, password=os.getenv('REDIS_PWD'))
+
 config.DATABASE_URL = os.getenv('NEO_DATABASE_URL')
 
 @application.route('/', methods=['GET','POST'])
 def get_health():
-    print(r.acl_whoami())
+    lister=r.scan_iter()
+    place_ids=[]
+    for place_id in lister:
+        print(place_id)
+        print(r.type(place_id),file=sys.stdout)
     return health_check()
 
 # Takes in an object with the push_token key set to the push notification key of the client
@@ -133,6 +138,13 @@ def get_infected_locations():
 @admin_protected
 def purge_places(content):
     return purge_place(r,content)
+
+#admin_token (as token in body) and 
+#removes all sets from db
+@application.route('/admin/purge-all',methods=['POST'])
+@admin_protected
+def purge(content):
+    return purge_all(r,content)
 
 
 

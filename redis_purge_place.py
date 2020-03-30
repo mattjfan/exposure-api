@@ -2,6 +2,7 @@ from flask import request
 from flask_api import status
 from utilities import make_response, check_for_values_in_request
 import os
+import sys
 
 #Removes all members from place_id, content being passed by Admin_Protected 
 #Wrapper
@@ -35,6 +36,15 @@ def purge_place(r,content):
 
     
     
+def purge_all(r,content):
+    lister=r.scan_iter()
 
+    for place_id in lister:
+        if (r.type(place_id) == b'set'):
+            r.delete(place_id) 
+
+    return make_response({"Response":"Places Have Been Purged"}, status.HTTP_200_OK)
+
+    
 
 
