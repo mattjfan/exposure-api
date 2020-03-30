@@ -31,11 +31,6 @@ config.DATABASE_URL = os.getenv('NEO_DATABASE_URL')
 
 @application.route('/', methods=['GET','POST'])
 def get_health():
-    lister=r.scan_iter()
-    place_ids=[]
-    for place_id in lister:
-        print(place_id)
-        print(r.type(place_id),file=sys.stdout)
     return health_check()
 
 # Takes in an object with the push_token key set to the push notification key of the client
