@@ -18,6 +18,8 @@ def get_contacted_ids(r):
     members = list(members)
     for i in range(len(members)): members[i]=str(members[i])
 
+    
+
     return make_response({ "tokens": (members)}, status.HTTP_200_OK)
 
 

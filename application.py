@@ -14,20 +14,22 @@ from data_models import Person, Place, WentToPlaceRel, ContactWithRel
 from create_user import create_new_user, ingestPushNotificationAndCreateID
 from healthcheck import health_check
 from push_notification import send_push_message
-from utilities import make_response, unobfuscate, check_for_values_in_request, send_message
+from utilities import make_response, unobfuscate, check_for_values_in_request, send_message, admin_protected
 from report_sickness import reportSicknessSum, get_reported_symptoms
 from redis_place_interactions import ingest_location_update, get_contacted_ids
 from invite_and_signup import invite_new_user, sign_up
 from database_access_helpers import (report_contact_between_individuals, 
 report_visited_place, retrieve_or_create_protouser_from_number,
 retrieve_or_create_person_from_identifier, does_proto_user_exist, get_is_at_risk)
+from redis_purge_place import purge_place,purge_all
 
 
 application = Flask(__name__)
 r = redis.Redis(host=os.getenv('REDIS_HOST'), port=os.getenv('REDIS_PORT'), db=0, password=os.getenv('REDIS_PWD'))
+
 config.DATABASE_URL = os.getenv('NEO_DATABASE_URL')
 
-@application.route('/')
+@application.route('/', methods=['GET','POST'])
 def get_health():
     return health_check()
 
@@ -124,6 +126,21 @@ def get_infected_locations():
         }
         json_list.append(location)
     return make_response({'locations':json_list}, status.HTTP_200_OK)
+
+#Takes place_id and admin_token (as token in body) and 
+#removes all members
+@application.route('/admin/purge-place',methods=['POST'])
+@admin_protected
+def purge_places(content):
+    return purge_place(r,content)
+
+#admin_token (as token in body) and 
+#removes all sets from db
+@application.route('/admin/purge-all',methods=['POST'])
+@admin_protected
+def purge(content):
+    return purge_all(r,content)
+
 
 
 if __name__ == "__main__":
